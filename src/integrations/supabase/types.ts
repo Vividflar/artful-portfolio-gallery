@@ -21,6 +21,8 @@ export type Database = {
           height: number | null
           id: string
           image_path: string
+          is_public: boolean
+          owner_id: string | null
           sort_order: number
           tags: string[] | null
           title: string
@@ -32,6 +34,8 @@ export type Database = {
           height?: number | null
           id?: string
           image_path: string
+          is_public?: boolean
+          owner_id?: string | null
           sort_order?: number
           tags?: string[] | null
           title: string
@@ -43,6 +47,8 @@ export type Database = {
           height?: number | null
           id?: string
           image_path?: string
+          is_public?: boolean
+          owner_id?: string | null
           sort_order?: number
           tags?: string[] | null
           title?: string
