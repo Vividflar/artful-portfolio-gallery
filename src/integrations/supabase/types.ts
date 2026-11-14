@@ -14,7 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      artworks: {
+        Row: {
+          created_at: string
+          description: string | null
+          height: number | null
+          id: string
+          image_path: string
+          sort_order: number
+          tags: string[] | null
+          title: string
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          height?: number | null
+          id?: string
+          image_path: string
+          sort_order?: number
+          tags?: string[] | null
+          title: string
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          height?: number | null
+          id?: string
+          image_path?: string
+          sort_order?: number
+          tags?: string[] | null
+          title?: string
+          width?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
