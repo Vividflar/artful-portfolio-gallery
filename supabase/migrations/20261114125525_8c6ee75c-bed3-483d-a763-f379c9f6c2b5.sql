@@ -1,0 +1,1 @@
+CREATE POLICY "Authenticated users can update portfolio images" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'portfolio') WITH CHECK (bucket_id = 'portfolio');
