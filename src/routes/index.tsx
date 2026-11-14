@@ -1,5 +1,5 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -54,7 +54,26 @@ export const Route = createFileRoute("/")({
 function GalleryPage() {
   const { data: artworks } = useSuspenseQuery(artworksQueryOptions);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [isSignedIn, setIsSignedIn] = useState(false);
   const selectedArtwork = selectedIndex === null ? null : artworks[selectedIndex] ?? null;
+
+  useEffect(() => {
+    let isCurrent = true;
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+        setIsSignedIn(Boolean(session?.user));
+      }
+    });
+
+    void supabase.auth.getUser().then(({ data }) => {
+      if (isCurrent) setIsSignedIn(Boolean(data.user));
+    });
+
+    return () => {
+      isCurrent = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     if (selectedIndex === null || artworks.length < 2) return;
@@ -93,6 +112,11 @@ function GalleryPage() {
             {artworks.length.toString().padStart(2, "0")} works
           </p>
         )}
+        <Button asChild variant="ghost" size="sm" className="ml-auto">
+          <Link to={isSignedIn ? "/admin" : "/login"}>
+            {isSignedIn ? "Admin" : "Sign in"}
+          </Link>
+        </Button>
       </header>
 
       <section
