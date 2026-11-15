@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project architecture
+
+- Keep the portfolio gallery public and fetch its public artwork list through a publishable-key server function, because public route loaders must work during SSR without a visitor session.
+- Keep gallery administration at `/admin` behind a client-side Supabase session check, because the browser-held session is the authentication source for this external Supabase project.

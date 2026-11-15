@@ -1,5 +1,5 @@
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useHydrated, useRouter } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -12,19 +12,18 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { listPublicArtworks } from "@/lib/artworks.functions";
 
 const artworksQueryOptions = queryOptions({
   queryKey: ["public-artworks"],
-  queryFn: async () => {
-    const { data, error } = await supabase
-      .from("artworks")
-      .select("id, title, description, tags, image_path, width, height")
-      .eq("is_public", true)
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false });
+  queryFn: () => listPublicArtworks(),
+});
 
-    if (error) throw error;
-    return data;
+const authUserQueryOptions = queryOptions({
+  queryKey: ["current-auth-user"],
+  queryFn: async () => {
+    const { data } = await supabase.auth.getUser();
+    return data.user;
   },
 });
 
@@ -53,27 +52,13 @@ export const Route = createFileRoute("/")({
 
 function GalleryPage() {
   const { data: artworks } = useSuspenseQuery(artworksQueryOptions);
+  const hydrated = useHydrated();
+  const { data: currentUser } = useQuery({
+    ...authUserQueryOptions,
+    enabled: hydrated,
+  });
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [isSignedIn, setIsSignedIn] = useState(false);
   const selectedArtwork = selectedIndex === null ? null : artworks[selectedIndex] ?? null;
-
-  useEffect(() => {
-    let isCurrent = true;
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
-        setIsSignedIn(Boolean(session?.user));
-      }
-    });
-
-    void supabase.auth.getUser().then(({ data }) => {
-      if (isCurrent) setIsSignedIn(Boolean(data.user));
-    });
-
-    return () => {
-      isCurrent = false;
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
 
   useEffect(() => {
     if (selectedIndex === null || artworks.length < 2) return;
@@ -112,11 +97,17 @@ function GalleryPage() {
             {artworks.length.toString().padStart(2, "0")} works
           </p>
         )}
-        <Button asChild variant="ghost" size="sm" className="ml-auto">
-          <Link to={isSignedIn ? "/admin" : "/login"}>
-            {isSignedIn ? "Admin" : "Sign in"}
-          </Link>
-        </Button>
+        <div className="ml-auto">
+          {currentUser ? (
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/admin">Admin</Link>
+            </Button>
+          ) : (
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/login">Sign in</Link>
+            </Button>
+          )}
+        </div>
       </header>
 
       <section
